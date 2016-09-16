@@ -28,7 +28,7 @@
 //////////////////////////////////////////
 //
 //                   !----------!
-//  radio rx (2) >---!          !---> radio tx (12)
+// radio rx (11) >---!          !---> radio tx (12)
 //                   ! servente !
 // RS-232 rx (1) >---!          !---> RS-232 tx (0)
 //                   !----------!
@@ -67,6 +67,12 @@ void setup() {
   // setup serial to/from pfSense
   Serial.begin(9600);
   Serial.flush();
+  pinMode(13, OUTPUT);
+   // impostazione TX e RX
+  vw_set_tx_pin(transmit_pin);
+  vw_set_rx_pin(receive_pin);  
+  vw_setup(2000);      
+  vw_rx_start(); 
 }
 //================================
 // loop
@@ -123,10 +129,17 @@ void loop() {
 	//--------------------------------
 	if (vw_get_message(buf, &buflen)){
 	  String stringaRX="";
+ 
 	  // retriving message
 	  for (int i = 0; i < buflen; i++){
 	    stringaRX += char(buf[i]);
 	  }
+   //Serial.print(stringaRX);
+      if(stringaRX==msgPulsSpegni){
+       digitalWrite(13, HIGH);   // turn the LED on (HIGH is the voltage level)
+  delay(1000);              // wait for a second
+  digitalWrite(13, LOW);     
+    }
 	  // only if pfSense is full-started
 	  // i can receive command from "keyboard"
 	  if(pfSenseInternalStep==9){
@@ -325,12 +338,12 @@ void txRicevutoComando(){
   vw_rx_start(); // enable rx section
 }
 void txPfsenseStatusToTransmit(char charState){
-  msgTxStatoServer[12]=charState;
+  msgTxStatoServer[11]=charState;
   vw_rx_stop(); // disable rx section
   vw_send((uint8_t *)msgTxStatoServer,13);
   vw_wait_tx(); // Wait until the whole message is gone
   vw_rx_start(); // enable rx section
-  msgTxStatoServer[12]='0';
+  msgTxStatoServer[11]='0';
 }
 
 /*
