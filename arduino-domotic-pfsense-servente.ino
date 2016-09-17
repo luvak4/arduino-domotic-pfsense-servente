@@ -40,7 +40,12 @@
 const int MSG_LEN = 13;
 const int POSIZIONE_CARATT = 11;
 const int pinLED =13;
-// 
+//
+const int pinLEDrosso =2;
+const int pinLEDgiallo =3;
+const int pinLEDverde =4;
+const int pinLEDblu =5;
+
 int pfSenseInternalStep=1;
 int seconds=0;
 // for my timing
@@ -67,6 +72,12 @@ void setup() {
   Serial.begin(9600);
   Serial.flush();
   pinMode(pinLED, OUTPUT);
+  pinMode(pinLEDrosso, OUTPUT);
+  pinMode(pinLEDgiallo, OUTPUT);
+  pinMode(pinLEDverde, OUTPUT);
+  pinMode(pinLEDblu, OUTPUT);
+
+  //  digitalWrite(pinLEDblu,HIGH);
    // impostazione TX e RX
   vw_set_tx_pin(transmit_pin);
   vw_set_rx_pin(receive_pin);  
@@ -342,7 +353,11 @@ void ParteSeriale(){
       }
       pfSenseInternalStep=16;
     } 
-    break;  
+    break;
+  case 16:
+    Serial.write("\n");
+    pfSenseInternalStep=9;
+    break;
   }
 }
 //================================
@@ -393,6 +408,51 @@ void txRicevutoComando(){
   digitalWrite(pinLED, LOW);
 }
 void txPfsenseStatusToTransmit(char charState){
+  switch (charState){
+    case '0':
+      digitalWrite(pinLEDrosso,LOW);
+      digitalWrite(pinLEDgiallo,LOW);
+      digitalWrite(pinLEDverde,LOW);
+      digitalWrite(pinLEDblu,LOW);  
+      break;
+    case '4':
+      digitalWrite(pinLEDrosso,HIGH);
+      digitalWrite(pinLEDgiallo,LOW);
+      digitalWrite(pinLEDverde,LOW);
+      digitalWrite(pinLEDblu,LOW);
+      break;  
+    case '1'://
+      digitalWrite(pinLEDrosso,LOW);
+      digitalWrite(pinLEDgiallo,HIGH);
+      digitalWrite(pinLEDverde,LOW);
+      digitalWrite(pinLEDblu,LOW); 
+      break;
+    case '3'://
+      digitalWrite(pinLEDrosso,LOW);
+      digitalWrite(pinLEDgiallo,HIGH);
+      digitalWrite(pinLEDverde,LOW);
+      digitalWrite(pinLEDblu,LOW);  
+      break;     
+    case '2'://
+      digitalWrite(pinLEDrosso,LOW);
+      digitalWrite(pinLEDgiallo,LOW);
+      digitalWrite(pinLEDverde,HIGH);
+      digitalWrite(pinLEDblu,LOW);
+      break; 
+    case '6'://
+      digitalWrite(pinLEDrosso,LOW);
+      digitalWrite(pinLEDgiallo,LOW);
+      digitalWrite(pinLEDverde,HIGH);
+      digitalWrite(pinLEDblu,LOW); 
+      break;      
+    case '5':
+      digitalWrite(pinLEDrosso,LOW);
+      digitalWrite(pinLEDgiallo,LOW);
+      digitalWrite(pinLEDverde,LOW);
+      digitalWrite(pinLEDblu,HIGH);  
+      break;                          
+  }
+  
   msgTxStatoServer[POSIZIONE_CARATT]=charState;
   vw_rx_stop(); // disable rx section
   vw_send((uint8_t *)msgTxStatoServer,MSG_LEN);
