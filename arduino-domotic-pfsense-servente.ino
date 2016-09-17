@@ -37,6 +37,9 @@
 //// this is the "servente" code ////
 /////////////////////////////////////
 #include <VirtualWire.h>
+const int MSG_LEN = 13;
+const int POSIZIONE_CARATT = 11;
+const int pinLED =13;
 // 
 int pfSenseInternalStep=1;
 int seconds=0;
@@ -49,17 +52,13 @@ const int transmit_pin = 12;
 const int receive_pin = 11; 
 uint8_t buf[VW_MAX_MESSAGE_LEN];
 uint8_t buflen = VW_MAX_MESSAGE_LEN;
-// commands that can be receive
-//////////////////////////////123456789012
-const String msgPulsSpegni  ="pulsPFSE0001";
-const String msgPulsRiavvia ="pulsPFSE0002";
-const String msgPulsSync    ="pulsPFSE0003";
-const String msgPulsPing    ="pulsPFSE0004";
+
 // commands that can be transmit
 //////////////////////////////////////123456789012 
-const char msgTxComandoRicevuto[13]  = "statPFSE0011";
+ char msgTxComandoRicevuto[13]  = "statPFSE0007";
 ///////////////////////////123456789012
 char msgTxStatoServer[13]="statPFSE0000";
+String stringaRX;
 //================================
 // setup
 //================================
@@ -67,7 +66,7 @@ void setup() {
   // setup serial to/from pfSense
   Serial.begin(9600);
   Serial.flush();
-  pinMode(13, OUTPUT);
+  pinMode(pinLED, OUTPUT);
    // impostazione TX e RX
   vw_set_tx_pin(transmit_pin);
   vw_set_rx_pin(receive_pin);  
@@ -125,51 +124,70 @@ void loop() {
 	    }
 	}
 	//--------------------------------
-	// message received
+	// BEGIN message received
 	//--------------------------------
 	if (vw_get_message(buf, &buflen)){
-	  String stringaRX="";
- 
-	  // retriving message
-	  for (int i = 0; i < buflen; i++){
-	    stringaRX += char(buf[i]);
-	  }
-   //Serial.print(stringaRX);
-      if(stringaRX==msgPulsSpegni){
-       digitalWrite(13, HIGH);   // turn the LED on (HIGH is the voltage level)
-  delay(1000);              // wait for a second
-  digitalWrite(13, LOW);     
+    //
+	  stringaRX="";
+    //
+	    // retriving message
+    for (int i = 1; i <= POSIZIONE_CARATT; i++){
+      stringaRX += char(buf[i-1]);
     }
+    if (stringaRX=="pulsPFSE000"){
+      //Serial.println(buf[POSIZIONE_CARATT]);
+      switch (buf[POSIZIONE_CARATT]){
+        case '1':
+          // spegni
+          txRicevutoComando();
+          if(pfSenseInternalStep==9){
+            pfSenseInternalStep=3;
+          }
+          break;
+        case '2':
+          // riavvia
+          txRicevutoComando();
+          if(pfSenseInternalStep==9){
+            pfSenseInternalStep=6;
+          }
+          break;
+        case '3':
+          // sync
+          txRicevutoComando();
+          if(pfSenseInternalStep==9){
+            pfSenseInternalStep=11;
+          }
+          if(pfSenseInternalStep==1){
+            pfSenseInternalStep=11;
+          }
+          break;
+        case '4':
+          // ping
+          txRicevutoComando();
+          if(pfSenseInternalStep==9){
+            pfSenseInternalStep=12;
+          }
+          break;
+      }
+    }
+    // pfSenseInternalStep==9
+    // =======================
 	  // only if pfSense is full-started
 	  // i can receive command from "keyboard"
-	  if(pfSenseInternalStep==9){
-	    if(stringaRX==msgPulsSpegni){
-              txRicevutoComando();	      
-	      pfSenseInternalStep=3;
-	    }
-	    if(stringaRX==msgPulsRiavvia){
-              txRicevutoComando();	      
-	      pfSenseInternalStep=6;
-	    }
-	    if(stringaRX==msgPulsSync){
-              txRicevutoComando();
-	      pfSenseInternalStep=11;
-	    }
-	    if(stringaRX==msgPulsPing){
-              txRicevutoComando();
-	      pfSenseInternalStep=12;
-	    }
-	  }
+    //
+	  //
+    // pfSenseInternalStep==1
+    // ======================
 	  // Only if FIRST START OF ARDUINO and
 	  // PF-SENSE FULL-STARTED
-	  // pushing sync button in "kayboard"
+	  // pushing sync button in "keyboard"
 	  // synchronizes Arduino with pfSense
-	  if(pfSenseInternalStep==1){
-	    if(stringaRX==msgPulsSync){
-	      pfSenseInternalStep=11;
-	    }
-	  }
+    //
+	
 	}
+  //--------------------------------
+  // END message received
+  //--------------------------------
 	//--------------------------------
 	// every second
 	// routine that read "Phase status" and
@@ -212,9 +230,9 @@ void ParteSeriale(){
     //--------------------------------
     if (Serial.available() > 0) {
       if (Serial.find("PC Engines ALIX")){
-	// pfSense is in ignition state
-	pfSenseInternalStep=2;
-	txPfsenseStatusToTransmit('1');
+	      // pfSense is in ignition state
+	      pfSenseInternalStep=2;
+	      txPfsenseStatusToTransmit('1');
       }
     }
     break;
@@ -224,9 +242,8 @@ void ParteSeriale(){
     //--------------------------------
     if (Serial.available() > 0 ) {
       if (Serial.find("Enter an option")){
-	pfSenseInternalStep=9;
-	//msgStatoServer = prefissoStatoServer + "2";
-	txPfsenseStatusToTransmit('2');
+	      pfSenseInternalStep=9;
+	      txPfsenseStatusToTransmit('2');
       }
     }
     break;	  
@@ -241,10 +258,10 @@ void ParteSeriale(){
     if (Serial.available()) {
       //Do you want to proceed [y|n]?"
       if (Serial.find("proceed")){
-	pfSenseInternalStep=5;
-	Serial.write("y\n"); // \n = ritorno a capo
-	// pfSense in shutdown
-	txPfsenseStatusToTransmit('3');
+	      pfSenseInternalStep=5;
+	      Serial.write("y\n"); // \n = ritorno a capo
+	      // pfSense in shutdown
+	      txPfsenseStatusToTransmit('3');
       }
     }
     break;	  
@@ -253,10 +270,10 @@ void ParteSeriale(){
       //The operating system has halted.
       //Please press any key to reboot.
       if (Serial.find("has halted")){
-	delay(1000); // for safety
-	pfSenseInternalStep=1;
-	// pfSense is OFF
-	txPfsenseStatusToTransmit('4');
+	      delay(1000); // for safety
+	      pfSenseInternalStep=1;
+	      // pfSense is OFF
+	      txPfsenseStatusToTransmit('4');
       }
     }
     break;	  
@@ -270,20 +287,20 @@ void ParteSeriale(){
   case 7:
     if (Serial.available()) {
       if (Serial.find("proceed")){
-	pfSenseInternalStep=8;
-	Serial.write("y\n");
-	// pfSense in shutdown
-	//msgStatoServer = prefissoStatoServer + "3";
-	txPfsenseStatusToTransmit('3');
+	      pfSenseInternalStep=8;
+	      Serial.write("y\n");
+	      // pfSense in shutdown
+	      //msgStatoServer = prefissoStatoServer + "3";
+	      txPfsenseStatusToTransmit('3');
       }
     }
     break;	  
   case 8:
     if (Serial.available()) {
       if (Serial.find("Rebooting")){
-	pfSenseInternalStep=1;
-	// pfSense OFF
-	txPfsenseStatusToTransmit('4');
+	      pfSenseInternalStep=1;
+	      // pfSense OFF
+	      txPfsenseStatusToTransmit('4');
       }
     }
     break; 
@@ -306,7 +323,7 @@ void ParteSeriale(){
   case 13:
     if (Serial.available()) {
       if (Serial.find("or IP address")){
-	pfSenseInternalStep=14;     
+	      pfSenseInternalStep=14;     
       }
     }
     break;
@@ -317,11 +334,11 @@ void ParteSeriale(){
   case 15:  
     if (Serial.available()) {
       if (Serial.find("0.0% packet")){
-	// internet OK
-	txPfsenseStatusToTransmit('5');
+	      // internet OK
+	      txPfsenseStatusToTransmit('5');
       } else {
-	// internet KO
-	txPfsenseStatusToTransmit('6');
+	      // internet KO
+	      txPfsenseStatusToTransmit('6');
       }
       pfSenseInternalStep=16;
     } 
@@ -332,18 +349,56 @@ void ParteSeriale(){
 // send "command receive" to "display"
 //================================
 void txRicevutoComando(){
+  // ==================
+  // for DEBUG ONLY
+  // ==================
+  /*
+  static char t;
+  switch (t){
+    case '0':
+      t='1';
+      break;
+    case '1':
+      t='2';
+      break;
+    case '2':
+      t='3';
+      break;
+    case '3':
+      t='4';
+      break;
+    case '4':
+      t='5';
+      break;
+    case '5':
+      t='6';
+      break;
+    case '6':
+      t='7';
+      break;
+    case '7':
+      t='0';
+      break;
+    default:
+      t='0';
+      break;
+  }
+  msgTxComandoRicevuto[POSIZIONE_CARATT]=t;
+  */
+  digitalWrite(pinLED, HIGH);
   vw_rx_stop(); // disable rx section
-  vw_send((uint8_t *)msgTxComandoRicevuto,13);
+  vw_send((uint8_t *)msgTxComandoRicevuto,MSG_LEN);
   vw_wait_tx(); // Wait until the whole message is gone
   vw_rx_start(); // enable rx section
+  digitalWrite(pinLED, LOW);
 }
 void txPfsenseStatusToTransmit(char charState){
-  msgTxStatoServer[11]=charState;
+  msgTxStatoServer[POSIZIONE_CARATT]=charState;
   vw_rx_stop(); // disable rx section
-  vw_send((uint8_t *)msgTxStatoServer,13);
+  vw_send((uint8_t *)msgTxStatoServer,MSG_LEN);
   vw_wait_tx(); // Wait until the whole message is gone
   vw_rx_start(); // enable rx section
-  msgTxStatoServer[11]='0';
+  msgTxStatoServer[POSIZIONE_CARATT]='0';
 }
 
 /*
