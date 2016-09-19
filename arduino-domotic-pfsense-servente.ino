@@ -132,6 +132,7 @@ void loop() {
 	if (pfSenseInternalStep==9){
 	    if(seconds > 300){
 	      pfSenseInternalStep=12;
+       seconds=0;
 	    }
 	}
 	//--------------------------------
@@ -410,45 +411,52 @@ void txRicevutoComando(){
 void txPfsenseStatusToTransmit(char charState){
   switch (charState){
     case '0':
+     // attempt sync
       digitalWrite(pinLEDrosso,LOW);
       digitalWrite(pinLEDgiallo,LOW);
       digitalWrite(pinLEDverde,LOW);
       digitalWrite(pinLEDblu,LOW);  
       break;
     case '4':
+    // pfSense is OFF
       digitalWrite(pinLEDrosso,HIGH);
       digitalWrite(pinLEDgiallo,LOW);
       digitalWrite(pinLEDverde,LOW);
       digitalWrite(pinLEDblu,LOW);
       break;  
     case '1'://
+    // pfSense is in ignition state
       digitalWrite(pinLEDrosso,LOW);
       digitalWrite(pinLEDgiallo,HIGH);
       digitalWrite(pinLEDverde,LOW);
       digitalWrite(pinLEDblu,LOW); 
       break;
     case '3'://
+    // pfSense in shutdown
       digitalWrite(pinLEDrosso,LOW);
       digitalWrite(pinLEDgiallo,HIGH);
       digitalWrite(pinLEDverde,LOW);
       digitalWrite(pinLEDblu,LOW);  
       break;     
     case '2'://
+    // pfSense ON
       digitalWrite(pinLEDrosso,LOW);
       digitalWrite(pinLEDgiallo,LOW);
       digitalWrite(pinLEDverde,HIGH);
       digitalWrite(pinLEDblu,LOW);
       break; 
     case '6'://
-      digitalWrite(pinLEDrosso,LOW);
+    // internet KO
+      digitalWrite(pinLEDrosso,HIGH);
       digitalWrite(pinLEDgiallo,LOW);
       digitalWrite(pinLEDverde,HIGH);
       digitalWrite(pinLEDblu,LOW); 
       break;      
     case '5':
+    // internet OK
       digitalWrite(pinLEDrosso,LOW);
       digitalWrite(pinLEDgiallo,LOW);
-      digitalWrite(pinLEDverde,LOW);
+      digitalWrite(pinLEDverde,HIGH);
       digitalWrite(pinLEDblu,HIGH);  
       break;                          
   }
