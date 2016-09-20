@@ -165,6 +165,8 @@ void loop() {
           break;
         case '3':
           // sync
+          seconds=0;
+          //
           txRicevutoComando();
           if(pfSenseInternalStep==9){
             pfSenseInternalStep=11;
@@ -320,7 +322,10 @@ void ParteSeriale(){
     //--------------------------------
     // sync Arduino -> pfSense
     //--------------------------------
-    Serial.write("exit\n\n");
+    Serial.write("exit\n");
+    delay(2000); // 
+    Serial.write("\n");
+    delay(5000);
     pfSenseInternalStep=2;
     // attempt sync
     txPfsenseStatusToTransmit('0');
@@ -447,13 +452,25 @@ void txPfsenseStatusToTransmit(char charState){
       break; 
     case '6'://
     // internet KO
+      digitalWrite(pinLEDrosso,LOW);
+      digitalWrite(pinLEDgiallo,LOW);
+      digitalWrite(pinLEDverde,LOW);
+      digitalWrite(pinLEDblu,LOW);  
+      delay(1000);    
+      //
       digitalWrite(pinLEDrosso,HIGH);
       digitalWrite(pinLEDgiallo,LOW);
       digitalWrite(pinLEDverde,HIGH);
       digitalWrite(pinLEDblu,LOW); 
       break;      
     case '5':
-    // internet OK
+      // internet OK
+      digitalWrite(pinLEDrosso,LOW);
+      digitalWrite(pinLEDgiallo,LOW);
+      digitalWrite(pinLEDverde,LOW);
+      digitalWrite(pinLEDblu,LOW);  
+      delay(1000);    
+      //
       digitalWrite(pinLEDrosso,LOW);
       digitalWrite(pinLEDgiallo,LOW);
       digitalWrite(pinLEDverde,HIGH);
