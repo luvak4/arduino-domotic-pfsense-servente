@@ -115,6 +115,7 @@ void loop() {
 	// BEGIN message received
 	//--------------------------------
 	if (vw_get_message(buf, &buflen)){
+    vw_rx_stop(); // disable rx section
 	  //
 	  stringaRX="";
 	  //
@@ -160,6 +161,7 @@ void loop() {
 	      break;
 	    }
 	  }
+   vw_rx_start(); // disable rx section
 	}
 	//--------------------------------
 	// END message received
