@@ -141,7 +141,7 @@ void loop() {
 	      }
 	      break;
 	    case '3':
-	      // SYNC
+	      // EXIT\N *** secondo me non serve
 	      seconds=0;
 	      //
 	      txRicevutoComando();
@@ -159,6 +159,15 @@ void loop() {
 		pfSenseInternalStep=12;
 	      }
 	      break;
+      case '5':
+        // \N a capo per sincronizzare
+        seconds=0;
+        if(pfSenseInternalStep==9){
+          pfSenseInternalStep=16;/////////
+        }
+        if(pfSenseInternalStep==1){
+          pfSenseInternalStep=16;/////////
+        }
 	    }
 	  }
    vw_rx_start(); // disable rx section
